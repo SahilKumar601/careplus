@@ -11,6 +11,9 @@ import { Input } from "@/components/ui/input"
 import CustomFormField from "../CustomFormField"
 import SubmitButton from "../SubmitButton"
 import { useState } from "react"
+import { UserFormVaildation } from "@/lib/Vaildation"
+import { useRouter } from "next/navigation"
+import { createUser } from "@/lib/actions/patients.action"
 export enum FormFieldType{
     INPUT = 'input',
     PHONE_INPUT = 'phoneInput',
@@ -21,60 +24,72 @@ export enum FormFieldType{
     SKELETON = 'skeleton',
 } 
  
-const formSchema = z.object({
-  username: z.string().min(2, {
-    message: "Username must be at least 2 characters.",
-  }),
-})
- 
 const PatientForm = () => {
+  const router = useRouter();
   const [isLoading, setisLoading] = useState(false)
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<z.infer<typeof UserFormVaildation>>({
+    resolver: zodResolver(UserFormVaildation),
     defaultValues: {
-      username: "",
+      name: "",
+      email:"",
+      phone:""
     },
   })
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values)
+  const onSubmit = async ({name,email,phone}: z.infer<typeof UserFormVaildation>) => {
+    console.log("Called onSubmit")
+    setisLoading(true);
+    try {
+      const userData = {
+        name,
+        email,
+        phone
+      }
+      const user = await createUser(userData);
+      if(user) router.push(`/patients/${user.$id}/register`)
+    } catch (error) {
+      console.log(error);
+    }
+    setisLoading(false);
   }
   return(
-    <>
-        <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 flex-1">
-            <section className="mb-12 space-y-4">
-                <h1 className="header">Hi There 👋</h1>
-                <p className="text-dark-700">Shedule your first appointment</p>
-            </section>
-            <CustomFormField 
-             control={form.control}
-             fieldType={FormFieldType.INPUT}
-             name="name"
-             label='Full Name'
-             placeholder="Enter your name"
-             icon='/assets/icons/user.svg'
-             iconAlt='User Image' 
-            />
-            <CustomFormField 
-             control={form.control}
-             fieldType={FormFieldType.INPUT}
-             name="email"
-             label='Email'
-             placeholder="example@example.com"
-             icon='/assets/icons/email.svg'
-             iconAlt='emaild icon' 
-            />
-            <CustomFormField 
-             control={form.control}
-             fieldType={FormFieldType.PHONE_INPUT}
-             name="Phone No."
-             label='Phone Number'
-             placeholder="+91 8887777XXX" 
-            />
-          <SubmitButton isLoading={isLoading}>Get Started</SubmitButton>
-        </form>
-        </Form>
-  </>
+    <Form {...form}>
+    <form onSubmit={form.handleSubmit(onSubmit)} className="flex-1 space-y-6">
+      <section className="mb-12 space-y-4">
+        <h1 className="header">Hi there 👋</h1>
+        <p className="text-dark-700">Get started with appointments.</p>
+      </section>
+
+      <CustomFormField
+        fieldType={FormFieldType.INPUT}
+        control={form.control}
+        name="name"
+        label="Full name"
+        placeholder="John Doe"
+        iconSrc="/assets/icons/user.svg"
+        iconAlt="user"
+      />
+
+      <CustomFormField
+        fieldType={FormFieldType.INPUT}
+        control={form.control}
+        name="email"
+        label="Email"
+        placeholder="johndoe@gmail.com"
+        iconSrc="/assets/icons/email.svg"
+        iconAlt="email"
+      />
+
+      <CustomFormField
+        fieldType={FormFieldType.PHONE_INPUT}
+        control={form.control}
+        name="phone"
+        label="Phone number"
+        placeholder="(555) 123-4567"
+      />
+
+      <SubmitButton isLoading={isLoading}>Get Started</SubmitButton>
+    </form>
+  </Form>
   )
 }
  
