@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input"
 import CustomFormField from "../CustomFormField"
 import SubmitButton from "../SubmitButton"
 import { useState } from "react"
-import { UserFormVaildation } from "@/lib/Vaildation"
+import { PatientFormValidation } from "@/lib/Vaildation"
 import { useRouter } from "next/navigation"
 import { createUser } from "@/lib/actions/patients.action"
 export enum FormFieldType{
@@ -27,16 +27,15 @@ export enum FormFieldType{
 const PatientForm = () => {
   const router = useRouter();
   const [isLoading, setisLoading] = useState(false)
-  const form = useForm<z.infer<typeof UserFormVaildation>>({
-    resolver: zodResolver(UserFormVaildation),
+  const form = useForm<z.infer<typeof PatientFormValidation>>({
+    resolver: zodResolver(PatientFormValidation),
     defaultValues: {
       name: "",
       email:"",
       phone:""
     },
   })
-  const onSubmit = async ({name,email,phone}: z.infer<typeof UserFormVaildation>) => {
-    console.log("Called onSubmit")
+  const onSubmit = async ({name,email,phone}: z.infer<typeof PatientFormValidation>) => {
     setisLoading(true);
     try {
       const userData = {

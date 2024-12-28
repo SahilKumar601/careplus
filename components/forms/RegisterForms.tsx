@@ -9,13 +9,13 @@ import { Input } from "@/components/ui/input";
 import CustomFormField from "../CustomFormField";
 import SubmitButton from "../SubmitButton";
 import { useState } from "react";
-import { UserFormVaildation } from "@/lib/Vaildation";
+import { PatientFormValidation } from "@/lib/Vaildation";
 import { useRouter } from "next/navigation";
-import { createUser } from "@/lib/actions/patients.action";
+import { createUser, registerUser } from "@/lib/actions/patients.action";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
-import { Doctors, GenderOptions, IdentificationTypes } from "@/constant";
+import { Doctors, GenderOptions, IdentificationTypes, PatientFormDefaultValues } from "@/constant";
 import { Label } from "../ui/label";
-import { SelectItem } from "../ui/select";
+import { SelectItem } from "@/components/ui/select";
 import Image from "next/image";
 import FileUploder from "../FileUploder";
 export enum FormFieldType {
@@ -31,28 +31,36 @@ export enum FormFieldType {
 const RegisterForm = ({ user }: { user: User }) => {
   const router = useRouter();
   const [isLoading, setisLoading] = useState(false);
-  const form = useForm<z.infer<typeof UserFormVaildation>>({
-    resolver: zodResolver(UserFormVaildation),
+  const form = useForm<z.infer<typeof PatientFormValidation>>({
+    resolver: zodResolver(PatientFormValidation),
     defaultValues: {
+      ...PatientFormDefaultValues,
       name: "",
       email: "",
       phone: "",
     },
   });
-  const onSubmit = async ({
-    name,
-    email,
-    phone,
-  }: z.infer<typeof UserFormVaildation>) => {
+  const onSubmit = async (values : z.infer<typeof PatientFormValidation>) => {
     setisLoading(true);
+    let formData;
+    if(values.identificationDocument && values.identificationDocument.length>0){
+      const blob = new Blob([values.identificationDocument[0]],{type:values.identificationType})
+      formData = new FormData();
+      formData.append('blobFile',blob);
+      formData.append('fileName',values.identificationDocument[0].name);
+    }
     try {
-      const userData = {
-        name,
-        email,
-        phone,
-      };
-      const user = await createUser(userData);
-      if (user) router.push(`/patients/${user.$id}/register`);
+      const patientData={
+        ...values,
+        userId:user.$id,
+        birthDate:new Date(values.birthDate),
+        identificationDocument:formData
+      }
+      // @ts-ignore
+      const patient = await registerUser(patientData);
+      if(patient){
+        router.push(`/patients/${user.$id}/new-appointment`)
+      }  
     } catch (error) {
       console.log(error);
     }
@@ -179,9 +187,8 @@ const RegisterForm = ({ user }: { user: User }) => {
           label="Primary Physician"
           placeholder="Select your Physician"
         >
-          {[
-            Doctors.map((doc) => (
-              <SelectItem key={doc.name} value={doc.name}>
+            {Doctors.map((doc,i) => (
+              <SelectItem key={doc.name+i} value={doc.name}>
                 <div className="flex cursor-pointer items-center gap-2">
                   <Image
                     src={doc.image}
@@ -190,13 +197,29 @@ const RegisterForm = ({ user }: { user: User }) => {
                     alt={doc.name}
                     className="rounded-full border border-dark-500"
                   />
-                  <p className="">{doc.name}</p>
+                  <p>{doc.name}</p>
                 </div>
               </SelectItem>
-            )),
-          ]}
+            ))}
         </CustomFormField>
-        <div className="flex felx-col gap-2 xl:flex-row">
+        <div className="flex flex-col gap-2 xl:flex-row">
+        <CustomFormField
+            fieldType={FormFieldType.INPUT}
+            control={form.control}
+            name="allergies"
+            label="Allergies (If any)"
+            placeholder="Peanuts, Mushrooms, etc.."
+          />
+
+          <CustomFormField
+            fieldType={FormFieldType.INPUT}
+            control={form.control}
+            name="currentMedication"
+            label="Current Medications"
+            placeholder="Write any Medication you follow"
+          />
+        </div>
+        <div className="flex flex-col gap-2 xl:flex-row">
           <CustomFormField
             fieldType={FormFieldType.INPUT}
             control={form.control}
@@ -290,13 +313,13 @@ const RegisterForm = ({ user }: { user: User }) => {
         <CustomFormField
           fieldType={FormFieldType.CHECKBOX}
           control={form.control}
-          name="treatmentConsent"
+          name="disclosureConsent"
           label="I consent to the use of disclosure to my information for treatment purposes"
         />
         <CustomFormField
           fieldType={FormFieldType.CHECKBOX}
           control={form.control}
-          name="treatmentConsent"
+          name="privacyConsent"
           label="I acknowledge that I reviewed and agree to the privacy policy"
         />
         <SubmitButton isLoading={isLoading}>Get Started</SubmitButton>

@@ -15,8 +15,9 @@ import 'react-phone-number-input/style.css'
 import PhoneInput from 'react-phone-number-input'
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { Select, SelectContent, SelectLabel, SelectTrigger, SelectValue } from "./ui/select";
+import { Select, SelectContent, SelectTrigger, SelectValue } from "./ui/select";
 import { Textarea } from "./ui/textarea";
+import { Checkbox } from "./ui/checkbox";
 
 
 interface CustomProps {
@@ -93,12 +94,10 @@ const RenderField = ({ field, props }: { field: any; props: CustomProps }) => {
     case FormFieldType.SELECT:
       return(
         <FormControl>
-          <Select onValueChange={field.onchange}
-          defaultValue={field.value}
-          >
+          <Select onValueChange={field.onChange} defaultValue={field.value}>
             <FormControl>
               <SelectTrigger className="shad-select-trigger">
-                <SelectValue placeholder={placeholder}/> 
+                <SelectValue placeholder={props.placeholder}/> 
               </SelectTrigger>
             </FormControl>
             <SelectContent className="shad-select-content">
@@ -117,7 +116,14 @@ const RenderField = ({ field, props }: { field: any; props: CustomProps }) => {
       return(
         <FormControl>
           <div className="flex items-center gap-4">
-            
+            <Checkbox
+              id={props.name}
+              checked={field.vale}
+              onCheckedChange={field.onChange}
+            />
+            <label htmlFor={props.name} className="checkbox-label">
+              {props.label}
+            </label>
           </div>
         </FormControl>
       )
