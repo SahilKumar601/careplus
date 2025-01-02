@@ -18,7 +18,7 @@ const Appointment = async({params:{userId}}:SearchParamProps) => {
           alt='patient'
           className="mb-12 h-10 w-fit"
         />
-         <AppointmentForms type='create' userId={userId} patientId={patient.$id} />
+         <AppointmentForms type='create' userId={userId} patientId={patient?.$id} />
          <p className="copyright mt-10 py-12">
           ©2024 CarePlus  
          </p>

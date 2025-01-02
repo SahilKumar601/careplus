@@ -18,6 +18,7 @@ import { Label } from "../ui/label";
 import { SelectItem } from "@/components/ui/select";
 import Image from "next/image";
 import FileUploder from "../FileUploder";
+import { createAppointment} from "@/lib/actions/appointment.action";
 export enum FormFieldType {
   INPUT = "input",
   PHONE_INPUT = "phoneInput",
@@ -50,17 +51,13 @@ const AppointmentForms = ({ type,userId,patientId }: {
     let status;
     switch (type) {
       case "schedule":
-        status='schedule'
+        status = "scheduled";
         break;
-      case 'create':
-        status='create'
-        break;
-      case 'cancel':
-        status='cancel'
+      case "cancel":
+        status = "cancelled";
         break;
       default:
-        status='pending'
-        break;
+        status = "pending";
     }
     try {
       if(type==='create' && patientId){
@@ -68,10 +65,15 @@ const AppointmentForms = ({ type,userId,patientId }: {
           userId,
           patient:patientId,
           primaryPhysician:values.primaryPhysician,
-          reason:values.reason,
+          reason:values.reason!,
           schedule:new Date(values.schedule),
           note:values.note,
           status:status as Status
+        }
+        const appointment = await createAppointment(appointmentData);
+        if(appointment){
+          form.reset();
+          router.push(`/patient/${userId}/new-appointment/success?appointmentId=${appointment.$id}`)
         }
       }
     } catch (error) {
@@ -97,7 +99,7 @@ const AppointmentForms = ({ type,userId,patientId }: {
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        className="flex-1 space-y-12"
+        className="flex-1 space-y-6"
       >
         <section className="space-y-4">
           <h1 className="header">Hi, There 👋</h1>
