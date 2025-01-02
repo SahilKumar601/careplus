@@ -1,10 +1,12 @@
-import RegisterForm from "@/components/forms/RegisterForms";
-import { getUser } from "@/lib/actions/patients.action";
+
+import AppointmentForms from "@/components/forms/AppointmentsForms";
+import { getPatient, getUser } from "@/lib/actions/patients.action";
 import Image from "next/image";
 import Link from "next/link";
 
-const Register = async({params:{userId}}:SearchParamProps) => {
-  const user = await getUser(userId)
+const Appointment = async({params:{userId}}:SearchParamProps) => {
+  const user = await getUser(userId);
+  const patient = await getPatient(userId);
   return (
     <div className="flex h-screen max-h-screen">
     <section className="remove-scrollbar container">
@@ -16,10 +18,8 @@ const Register = async({params:{userId}}:SearchParamProps) => {
           alt='patient'
           className="mb-12 h-10 w-fit"
         />
-
-        <RegisterForm user={user}/>
-        
-         <p className="justify-items-end text-dark-600 xl:text-left">
+         <AppointmentForms type='create' userId={userId} patientId={patient.$id} />
+         <p className="copyright mt-10 py-12">
           ©2024 CarePlus  
          </p>
       </div>
@@ -34,4 +34,4 @@ const Register = async({params:{userId}}:SearchParamProps) => {
   </div>
   )
 }
-export default Register;
+export default Appointment;
