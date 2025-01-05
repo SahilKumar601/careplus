@@ -18,7 +18,8 @@ import { Label } from "../ui/label";
 import { SelectItem } from "@/components/ui/select";
 import Image from "next/image";
 import FileUploder from "../FileUploder";
-import { createAppointment} from "@/lib/actions/appointment.action";
+import { createAppointment, updateAppointment} from "@/lib/actions/appointment.action";
+import { Appointment } from "@/types/appwrite.types";
 export enum FormFieldType {
   INPUT = "input",
   PHONE_INPUT = "phoneInput",
@@ -29,10 +30,12 @@ export enum FormFieldType {
   SKELETON = "skeleton",
 }
 
-const AppointmentForms = ({ type,userId,patientId }: { 
-    type: 'create'|'cancel'|'schedule',
-    userId:string,
-    patientId:string,
+const AppointmentForms = ({ type,userId,patientId,appointment,setOpen}: { 
+    type: 'create'|'cancel'|'schedule';
+    userId:string;
+    patientId:string;
+    appointment?:Appointment;
+    setOpen : (open:boolean) => void;
  }) => {
   const router = useRouter();
   const [isLoading, setisLoading] = useState(false);
@@ -40,10 +43,11 @@ const AppointmentForms = ({ type,userId,patientId }: {
   const form = useForm<z.infer<typeof AppointmentFormVaildation>>({
     resolver: zodResolver(AppointmentFormVaildation),
     defaultValues: {
-      primaryPhysician: "",
-      schedule: new Date(),
-      reason: "",
-      note: "",
+      primaryPhysician: appointment && appointment.primaryPhysician,
+      schedule: appointment ? new Date(appointment.schedule): new Date(),
+      reason: appointment ? appointment.reason : "",
+      note: appointment ? appointment.note : "",
+      cancellationReason: appointment?.cancellationReason || "",
     },
   });
   const onSubmit = async (values : z.infer<typeof AppointmentFormVaildation>) => {
@@ -75,6 +79,23 @@ const AppointmentForms = ({ type,userId,patientId }: {
           form.reset();
           router.push(`/patient/${userId}/new-appointment/success?appointmentId=${appointment.$id}`)
         }
+      }else{
+        const appointmentUpdate = {
+          userId,
+          appointmentId:appointment?.$id!,
+          appointment:{
+            primaryPhysician:values?.primaryPhysician,
+            schedule: new Date(values?.schedule),
+            status:status as Status,
+            cancellationReason:values?.cancellationReason
+          },
+          type,
+        }
+        const updatedAppointment = await updateAppointment(appointmentUpdate);
+        if(updatedAppointment){
+          setOpen && setOpen(false);
+          form.reset();
+        }
       }
     } catch (error) {
       console.log(error);
@@ -101,10 +122,10 @@ const AppointmentForms = ({ type,userId,patientId }: {
         onSubmit={form.handleSubmit(onSubmit)}
         className="flex-1 space-y-6"
       >
-        <section className="space-y-4">
+        {type === 'create' && <section className="space-y-4">
           <h1 className="header">Hi, There 👋</h1>
           <p className="text-dark-700">Let book your Appointment within 10sec.</p>
-        </section> 
+        </section>}
         {type !== 'cancel' && (
           <>
             <CustomFormField

@@ -1,5 +1,7 @@
+import { Button } from "@/components/ui/button";
 import { Doctors } from "@/constant";
 import { getAppointment } from "@/lib/actions/appointment.action";
+import { formatDateTime } from "@/lib/utils";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -38,9 +40,32 @@ const Success = async({params:{userId},searchParams}:SearchParamProps) => {
             <section className="request-details">
                 <p>Request appointment details</p>
                 <div className="flex items-center gap-3">
-
+                    <Image
+                        src={doctor?.image!}
+                        alt="doctor image"
+                        height={100}
+                        width={100}
+                        className="size-6"
+                    />
+                    <p className="whitespace-nowrap">Dr. {doctor?.name}</p>
+                </div>
+                <div className="flex gap-2">
+                    <Image
+                     src='/assets/icons/calendar.svg'
+                     height={24}
+                     width={24}
+                     alt="calendar"
+                    />
+                    <p>{formatDateTime(appointment.schedule).dateTime}</p>
                 </div>
             </section>
+            <Button className="shad-primary-btn" variant='outline' asChild>
+                <Link href={`/patients/${userId}/new-appointment`}>
+                    Book new appointment
+                </Link>
+            </Button>
+
+            <p className="copyright">©2024 CarePlus</p>
           </div>
         </div>
     );
