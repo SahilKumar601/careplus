@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input"
 import CustomFormField from "../CustomFormField"
 import SubmitButton from "../SubmitButton"
 import { useState } from "react"
-import { PatientFormValidation } from "@/lib/Vaildation"
+import { PatientFormValidation, UserFormValidation } from "@/lib/Vaildation"
 import { useRouter } from "next/navigation"
 import { createUser } from "@/lib/actions/patients.action"
 export enum FormFieldType{
@@ -27,29 +27,36 @@ export enum FormFieldType{
 const PatientForm = () => {
   const router = useRouter();
   const [isLoading, setisLoading] = useState(false)
-  const form = useForm<z.infer<typeof PatientFormValidation>>({
-    resolver: zodResolver(PatientFormValidation),
+  const form = useForm<z.infer<typeof UserFormValidation>>({
+    resolver: zodResolver(UserFormValidation),
     defaultValues: {
       name: "",
-      email:"",
-      phone:""
+      email: "",
+      phone: "",
     },
-  })
-  const onSubmit = async ({name,email,phone}: z.infer<typeof PatientFormValidation>) => {
+  });
+
+  const onSubmit = async (values: z.infer<typeof UserFormValidation>) => {
     setisLoading(true);
+
     try {
-      const userData = {
-        name,
-        email,
-        phone
+      const user = {
+        name: values.name,
+        email: values.email,
+        phone: values.phone,
+      };
+
+      const newUser = await createUser(user);
+
+      if (newUser) {
+        router.push(`/patients/${newUser.$id}/register`);
       }
-      const user = await createUser(userData);
-      if(user) router.push(`/patients/${user.$id}/register`)
     } catch (error) {
       console.log(error);
     }
+
     setisLoading(false);
-  }
+  };
   return(
     <Form {...form}>
     <form onSubmit={form.handleSubmit(onSubmit)} className="flex-1 space-y-6">
